@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manga → Slideshow Video | Instant Generator</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #242430;
+      --border: #33334a;
+      --accent: #7c5cff;
+      --accent-hover: #9478ff;
+      --text: #f0f0f5;
+      --muted: #8888a0;
+      --success: #2dd4a8;
+      --danger: #ff5c7c;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      background: linear-gradient(90deg, #7c5cff, #ff5c9a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 48px 24px;
+      text-align: center;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.08);
+      transform: scale(1.01);
+    }
+
+    .drop-zone.has-files {
+      padding: 20px;
+      border-style: solid;
+    }
+
+    .drop-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+
+    .drop-zone h2 {
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+    }
+
+    .drop-zone p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Controls */
+    .controls {
+      display: none;
+      margin-top: 28px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls.visible { display: block; }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9b6dff);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--accent-hover), #a88aff);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(124, 92, 255, 0.35);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #2e2e3c;
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 92, 124, 0.1);
+    }
+
+    /* Pages Grid */
+    .pages-section {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .pages-section.visible { display: block; }
+
+    .section-title {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 14px;
+    }
+
+    .page-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+    }
+
+    .page-card:active { cursor: grabbing; }
+    .page-card.dragging { opacity: 0.4; transform: scale(0.95); }
+    .page-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+
+    .page-card img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+      background: #111;
+    }
+
+    .page-card .info {
+      padding: 8px 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-card .remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .page-card:hover .remove { opacity: 1; }
+
+    .page-card .order {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Progress & Result */
+    .progress-section, .result-section {
+      display: none;
+      margin-top: 28px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .progress-section.visible, .result-section.visible { display: block; }
+
+    .progress-bar-wrap {
+      height: 10px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ff5c9a);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 999px;
+    }
+
+    .status-text {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    video.result-video {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      background: #000;
+      margin: 16px 0;
+      box-shadow: var(--shadow);
+    }
+
+    .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      .pages-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+      .btn-row { flex-direction: column; align-items: stretch; }
+      button { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <span>Manga → Video</span>
+      <span class="badge">Instant Slideshow</span>
+    </div>
+    <div style="font-size:0.85rem;color:var(--muted)">Drag pages → Generate video</div>
+  </header>
+
+  <div class="container">
+    <!-- Drop Zone -->
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📖</div>
+      <h2>Drop manga pages here</h2>
+      <p>or click to select multiple images (JPG, PNG, WebP)</p>
+      <p style="margin-top:8px;font-size:0.85rem">Supports dozens of pages • Order will be preserved</p>
+      <input type="file" id="fileInput" accept="image/*" multiple />
+    </div>
+
+    <!-- Controls -->
+    <div class="controls" id="controls">
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Duration per page (seconds)</label>
+          <input type="number" id="duration" value="2.5" min="0.5" max="15" step="0.5" />
+        </div>
+        <div class="control-group">
+          <label>Transition</label>
+          <select id="transition">
+            <option value="none">None (hard cut)</option>
+            <option value="fade" selected>Fade</option>
+            <option value="slide">Slide left</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Resolution</label>
+          <select id="resolution">
+            <option value="1080">1080p (Full HD)</option>
+            <option value="720" selected>720p (HD)</option>
+            <option value="540">540p (Mobile)</option>
+            <option value="original">Original size</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>FPS</label>
+          <select id="fps">
+            <option value="24">24 fps</option>
+            <option value="30" selected>30 fps</option>
+            <option value="60">60 fps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="generateBtn">
+          ▶️ Generate Slideshow Video
+        </button>
+        <button class="btn-secondary" id="clearBtn">Clear All</button>
+        <span class="hint" id="pageCount">0 pages loaded</span>
+      </div>
+    </div>
+
+    <!-- Pages Preview -->
+    <div class="pages-section" id="pagesSection">
+      <div class="section-title">
+        <span>📄 Pages (drag to reorder)</span>
+        <span class="hint">First page = start of video</span>
+      </div>
+      <div class="pages-grid" id="pagesGrid"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section" id="progressSection">
+      <h3>Generating video…</h3>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p class="status-text" id="statusText">Preparing frames…</p>
+    </div>
+
+    <!-- Result -->
+    <div class="result-section" id="resultSection">
+      <h3 style="color:var(--success)">✅ Video ready!</h3>
+      <video class="result-video" id="resultVideo" controls playsinline></video>
+      <div class="btn-row" style="justify-content:center">
+        <a id="downloadLink" download="manga-slideshow.webm">
+          <button class="btn-primary">⬇️ Download Video</button>
+        </a>
+        <button class="btn-secondary" id="newVideoBtn">Make Another</button>
+      </div>
+      <p class="hint">Tip: WebM works great on Discord, Telegram, WhatsApp & modern browsers.</p>
+    </div>
+  </div>
+
+  <footer>
+    Client-side only • Your images never leave your device • Made for manga readers
+  </footer>
+
+  <script>
+    // ============ State ============
+    let pages = []; // { id, file, url, name }
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    // ============ DOM ============
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const pagesSection = document.getElementById('pagesSection');
+    const pagesGrid = document.getElementById('pagesGrid');
+    const pageCount = document.getElementById('pageCount');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressSection = document.getElementById('progressSection');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('statusText');
+    const resultSection = document.getElementById('resultSection');
+    const resultVideo = document.getElementById('resultVideo');
+    const downloadLink = document.getElementById('downloadLink');
+    const newVideoBtn = document.getElementById('newVideoBtn');
+
+    // ============ Drag & Drop ============
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+      dropZone.addEventListener(evt, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    dropZone.addEventListener('dragenter', () => dropZone.classList.add('dragover'));
+    dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+    function handleFiles(fileList) {
+      const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      if (!imageFiles.length) {
+        alert('Please select image files only (JPG, PNG, WebP…)');
+        return;
+      }
+
+      imageFiles.forEach(file => {
+        const id = crypto.randomUUID();
+        const url = URL.createObjectURL(file);
+        pages.push({ id, file, url, name: file.name });
+      });
+
+      renderPages();
+      updateUI();
+    }
+
+    // ============ Render Pages ============
+    function renderPages() {
+      pagesGrid.innerHTML = '';
+      pages.forEach((page, index) => {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        card.draggable = true;
+        card.dataset.id = page.id;
+
+        card.innerHTML = `
+          <span class="order">${index + 1}</span>
+          <button class="remove" title="Remove">×</button>
+          <img src="${page.url}" alt="${page.name}" loading="lazy" />
+          <div class="info">
+            <span>${page.name.length > 18 ? page.name.slice(0,15)+'…' : page.name}</span>
+          </div>
+        `;
+
+        card.querySelector('.remove').addEventListener('click', (e) => {
+          e.stopPropagation();
+          removePage(page.id);
+        });
+
+        // Drag reorder
+        card.addEventListener('dragstart', (e) => {
+          card.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', page.id);
+        });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          const draggedId = e.dataTransfer.getData('text/plain');
+          if (draggedId === page.id) return;
+          reorderPages(draggedId, page.id);
+        });
+
+        pagesGrid.appendChild(card);
+      });
+    }
+
+    function removePage(id) {
+      const page = pages.find(p => p.id === id);
+      if (page) URL.revokeObjectURL(page.url);
+      pages = pages.filter(p => p.id !== id);
+      renderPages();
+      updateUI();
+    }
+
+    function reorderPages(draggedId, targetId) {
+      const from = pages.findIndex(p => p.id === draggedId);
+      const to = pages.findIndex(p => p.id === targetId);
+      if (from < 0 || to < 0) return;
+      const [item] = pages.splice(from, 1);
+      pages.splice(to, 0, item);
+      renderPages();
+    }
+
+    function updateUI() {
+      const hasPages = pages.length > 0;
+      controls.classList.toggle('visible', hasPages);
+      pagesSection.classList.toggle('visible', hasPages);
+      dropZone.classList.toggle('has-files', hasPages);
+      pageCount.textContent = `${pages.length} page${pages.length !== 1 ? 's' : ''} loaded`;
+      generateBtn.disabled = !hasPages;
+
+      if (hasPages) {
+        dropZone.querySelector('h2').textContent = 'Add more pages';
+        dropZone.querySelector('p').textContent = 'or drop more images here';
+      }
+    }
+
+    clearBtn.addEventListener('click', () => {
+      pages.forEach(p => URL.revokeObjectURL(p.url));
+      pages = [];
+      renderPages();
+      updateUI();
+      resultSection.classList.remove('visible');
+      progressSection.classList.remove('visible');
+      dropZone.querySelector('h2').textContent = 'Drop manga pages here';
+      dropZone.querySelector('p').textContent = 'or click to select multiple images (JPG, PNG, WebP)';
+    });
+
+    newVideoBtn.addEventListener('click', () => {
+      resultSection.classList.remove('visible');
+      progressSection.classList.remove('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ============ Video Generation ============
+    generateBtn.addEventListener('click', startGeneration);
+
+    async function startGeneration() {
+      if (pages.length === 0) return;
+
+      const duration = parseFloat(document.getElementById('duration').value) || 2.5;
+      const transition = document.getElementById('transition').value;
+      const resOption = document.getElementById('resolution').value;
+      const fps = parseInt(document.getElementById('fps').value) || 30;
+
+      generateBtn.disabled = true;
+      progressSection.classList.add('visible');
+      resultSection.classList.remove('visible');
+      progressBar.style.width = '0%';
+      statusText.textContent = 'Loading images…';
+
+      // Load all images
+      const images = await Promise.all(pages.map(p => loadImage(p.url)));
+      statusText.textContent = 'Preparing canvas…';
+
+      // Determine output size
+      let outW, outH;
+      if (resOption === 'original') {
+        // Use max dimensions across pages, keep aspect roughly
+        outW = Math.max(...images.map(img => img.naturalWidth));
+        outH = Math.max(...images.map(img => img.naturalHeight));
+        // Cap extremely large originals for performance
+        const maxDim = 1920;
+        if (outW > maxDim || outH > maxDim) {
+          const scale = maxDim / Math.max(outW, outH);
+          outW = Math.round(outW * scale);
+          outH = Math.round(outH * scale);
+        }
+      } else {
+        const targetH = parseInt(resOption);
+        // Assume typical manga portrait ~ 0.7 ratio, but use average aspect
+        const avgAspect = images.reduce((s, img) => s + (img.naturalWidth / img.naturalHeight), 0) / images.length;
+        outH = targetH;
+        outW = Math.round(outH * avgAspect);
+        // Make even for video codecs
+        outW = outW % 2 === 0 ? outW : outW + 1;
+        outH = outH % 2 === 0 ? outH : outH + 1;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+
+      // MediaRecorder setup
+      const stream = canvas.captureStream(fps);
+      recordedChunks = [];
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+          ? 'video/webm;codecs=vp8'
+          : 'video/webm';
+
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 6_000_000
+      });
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        resultVideo.src = url;
+        downloadLink.href = url;
+        downloadLink.download = `manga-slideshow-${Date.now()}.webm`;
+
+        progressSection.classList.remove('visible');
+        resultSection.classList.add('visible');
+        generateBtn.disabled = false;
+        statusText.textContent = 'Done!';
+      };
+
+      mediaRecorder.start(100); // timeslice
+
+      // Animation loop
+      const totalFramesPerPage = Math.round(duration * fps);
+      const transitionFrames = transition === 'none' ? 0 : Math.min(Math.round(0.4 * fps), Math.floor(totalFramesPerPage / 3));
+      const holdFrames = totalFramesPerPage - transitionFrames;
+
+      let pageIndex = 0;
+      let frameInPage = 0;
+      let prevImage = null;
+
+      function drawImageFit(img, alpha = 1) {
+        ctx.globalAlpha = alpha;
+        // Cover / contain logic – contain with letterbox (black bars)
+        const scale = Math.min(outW / img.naturalWidth, outH / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        const x = (outW - w) / 2;
+        const y = (outH - h) / 2;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, outW, outH);
+        ctx.drawImage(img, x, y, w, h);
+        ctx.globalAlpha = 1;
+      }
+
+      function renderFrame() {
+        if (pageIndex >= images.length) {
+          // Finish
+          setTimeout(() => mediaRecorder.stop(), 200);
+          return;
+        }
+
+        const current = images[pageIndex];
+        const progress = (pageIndex + frameInPage / totalFramesPerPage) / images.length;
+        progressBar.style.width = `${Math.min(99, progress * 100)}%`;
+        statusText.textContent = `Rendering page ${pageIndex + 1} / ${images.length}…`;
+
+        if (transition === 'none' || frameInPage < holdFrames || !prevImage) {
+          drawImageFit(current);
+        } else {
+          // Transition phase
+          const t = (frameInPage - holdFrames) / transitionFrames; // 0 → 1
+
+          if (transition === 'fade') {
+            drawImageFit(prevImage, 1 - t);
+            drawImageFit(current, t);
+          } else if (transition === 'slide') {
+            // Slide left: prev moves left, current comes from right
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, outW, outH);
+
+            const offset = Math.round(t * outW);
+
+            // Draw prev (shifted left)
+            const scaleP = Math.min(outW / prevImage.naturalWidth, outH / prevImage.naturalHeight);
+            const wP = prevImage.naturalWidth * scaleP;
+            const hP = prevImage.naturalHeight * scaleP;
+            const xP = (outW - wP) / 2 - offset;
+            const yP = (outH - hP) / 2;
+            ctx.drawImage(prevImage, xP, yP, wP, hP);
+
+            // Draw current (from right)
+            const scaleC = Math.min(outW / current.naturalWidth, outH / current.naturalHeight);
+            const wC = current.naturalWidth * scaleC;
+            const hC = current.naturalHeight * scaleC;
+            const xC = (outW - wC) / 2 + (outW - offset);
+            const yC = (outH - hC) / 2;
+            ctx.drawImage(current, xC, yC, wC, hC);
+          }
+        }
+
+        frameInPage++;
+        if (frameInPage >= totalFramesPerPage) {
+          prevImage = current;
+          pageIndex++;
+          frameInPage = 0;
+        }
+
+        requestAnimationFrame(renderFrame);
+      }
+
+      // Start rendering
+      requestAnimationFrame(renderFrame);
+    }
+
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    // Keyboard: Enter to generate when ready
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && pages.length > 0 && !generateBtn.disabled) {
+        e.preventDefault();
+        startGeneration();
+      }
+    });
+  </script>
+</body>
+</html>

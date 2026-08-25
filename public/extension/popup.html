@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Panel Reel Saver</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Panel Reel Saver</h1>
+        <p id="status">Scanning this page…</p>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <span class="hint">Only reader panels shown</span>
+      <span id="count" class="count"></span>
+    </div>
+
+    <div class="actions">
+      <button id="zip" disabled>Save numbered zip</button>
+      <button id="rescan" class="ghost">Rescan</button>
+    </div>
+
+    <ul id="list"></ul>
+    <p id="empty" class="empty hidden">No images found on this page.</p>
+    <p id="error" class="error hidden"></p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

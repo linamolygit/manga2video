@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Panel Reel Saver",
+  "version": "1.0.1",
+  "description": "Find every image on the current page. Save one file, or a numbered zip. Runs only in your browser.",
+  "action": {
+    "default_title": "Panel Reel Saver",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "permissions": ["activeTab", "scripting", "downloads"],
+  "host_permissions": ["https://media.omegascans.org/*"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
